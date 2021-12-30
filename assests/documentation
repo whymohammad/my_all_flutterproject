@@ -1,0 +1,101 @@
+
+
+//TODO:STEPS FOR NOTIFICATION IN FLUTTER ////////
+
+
+
+//TODO: STEP : 1
+//conect your app with flutter
+
+WidgetsFlutterBinding.ensureInitialized();
+await Firebase.initializeApp();
+
+
+//TODO:STEP :2
+///install the flutter_notifications in you pubspecyaml file
+
+//TODO:step :3
+///add channel to your  AndroidManifest.xml
+ <meta-data
+                android:name="com.google.firebase.messaging.default_notification_channel_id"
+                android:value="mychanel"
+                />
+
+
+   //TODO:step :4
+   ///Now create your channel
+
+   class LocalNotificationService {
+     static final FlutterLocalNotificationsPlugin
+     _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+     static void initialize() {
+       final InitializationSettings initializationSettings =
+       InitializationSettings(
+           android: AndroidInitializationSettings("@mipmap/ic_launcher"));
+       _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+     }
+
+     static void display(RemoteMessage message) async{
+       try {
+         print("In Notification method");
+         // int id = DateTime.now().microsecondsSinceEpoch ~/1000000;
+         Random random = new Random();
+         int id = random.nextInt(1000);
+         final NotificationDetails notificationDetails = NotificationDetails(
+             android: AndroidNotificationDetails(
+               "mychanel",
+               "my chanel",
+               importance: Importance.max,
+               priority: Priority.high,
+             )
+
+         );
+         print("my id is ${id.toString()}");
+         await _flutterLocalNotificationsPlugin.show(
+
+           id,
+           message.notification!.title,
+           message.notification!.title,
+           notificationDetails,);
+       } on Exception catch (e) {
+         print('Error>>>$e');
+       }
+     }
+   }
+
+//TODO:step:4
+///now we will crate a handler for the notifications
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print(message.data.toString());
+  print(message.notification!.toString());
+
+}
+
+//TODO:step:5
+now initialize the localNotifications in the main method
+
+LocalNotificationService.initialize();
+
+
+//TODO:step:6
+call the handler created in the main method(for backgroung notifications)
+
+FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+
+//TODO:step :7
+
+          Inside the init state call the firebase messages instnces
+          and disply the localnotificationsservices(for forgroung notifications)
+void initState() {
+    // TODO: implement initState
+    super.initState();
+    FirebaseMessaging.instance.getInitialMessage();
+    FirebaseMessaging.onMessage.listen((message) {
+      if(message.notification != null){
+        print(message.notification!.title);
+        print(message.notification!.body);
+      }
+      LocalNotificationService.display(message);
+    });
+  }
